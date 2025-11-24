@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>示例图库 - PixelAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        }
+        
+        .pixel-button {
+            background: linear-gradient(45deg, #00d4ff, #8b5cf6);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .pixel-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+        
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.3);
+        }
+        
+        .comparison-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gallery-item:hover .comparison-overlay {
+            opacity: 1;
+        }
+        
+        .filter-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #00d4ff;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-tag:hover, .filter-tag.active {
+            background: rgba(0, 212, 255, 0.4);
+            color: white;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-panel">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <img src="resources/logo-pixel-ai.png" alt="PixelAI Logo" class="w-10 h-10">
+                    <h1 class="text-2xl font-bold text-white neon-text">PixelAI</h1>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="text-gray-300 hover:text-cyan-400 transition-colors">处理工具</a>
+                    <a href="gallery.html" class="text-white hover:text-cyan-400 transition-colors">示例图库</a>
+                    <a href="about.html" class="text-gray-300 hover:text-cyan-400 transition-colors">使用教程</a>
+                    <button class="pixel-button" onclick="window.location.href='index.html'">开始使用</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主要内容 -->
+    <main class="pt-24 pb-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- 页面标题 -->
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-white mb-6 neon-text">处理示例图库</h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    探索PixelAI的强大处理能力，查看各种像素图在处理前后的惊人变化
+                </p>
+            </div>
+            
+            <!-- 筛选器 -->
+            <div class="glass-panel rounded-2xl p-6 mb-8">
+                <div class="flex flex-wrap items-center justify-between">
+                    <div class="flex flex-wrap items-center space-x-4 mb-4 lg:mb-0">
+                        <span class="text-white font-medium">筛选条件:</span>
+                        <div class="flex flex-wrap">
+                            <span class="filter-tag active" data-filter="all">全部</span>
+                            <span class="filter-tag" data-filter="characters">角色</span>
+                            <span class="filter-tag" data-filter="landscapes">场景</span>
+                            <span class="filter-tag" data-filter="objects">物品</span>
+                            <span class="filter-tag" data-filter="animations">动画</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <input type="text" id="searchInput" placeholder="搜索示例..." 
+                               class="px-4 py-2 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-cyan-400 focus:outline-none">
+                        <select id="sortSelect" class="px-4 py-2 bg-gray-800 text-white rounded-lg border border-gray-600">
+                            <option value="newest">最新上传</option>
+                            <option value="popular">最受欢迎</option>
+                            <option value="name">名称排序</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 特色展示轮播 -->
+            <div class="glass-panel rounded-2xl p-6 mb-12">
+                <h3 class="text-2xl font-bold text-white mb-6 text-center">特色处理案例</h3>
+                <div class="splide" id="featured-carousel">
+                    <div class="splide__track">
+                        <ul class="splide__list">
+                            <li class="splide__slide">
+                                <div class="relative">
+                                    <img src="resources/before-after-comparison.png" alt="处理前后对比" class="w-full rounded-lg">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+                                    <div class="absolute bottom-6 left-6 text-white">
+                                        <h4 class="text-xl font-bold mb-2">角色像素优化</h4>
+                                        <p class="text-sm opacity-90">智能对齐 + 杂色去除</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="splide__slide">
+                                <div class="relative">
+                                    <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/6d7e9b1e3845a1a750fe3d590f2f624488319dfe.jpg" alt="场景处理" class="w-full rounded-lg">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+                                    <div class="absolute bottom-6 left-6 text-white">
+                                        <h4 class="text-xl font-bold mb-2">场景像素优化</h4>
+                                        <p class="text-sm opacity-90">颜色量化 + 边缘平滑</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="splide__slide">
+                                <div class="relative">
+                                    <img src="https://kimi-web-img.moonshot.cn/img/i.pinimg.com/8c1efa65f35f6643374bc6e66a1f60d5da589285.png" alt="物品处理" class="w-full rounded-lg">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg"></div>
+                                    <div class="absolute bottom-6 left-6 text-white">
+                                        <h4 class="text-xl font-bold mb-2">物品像素优化</h4>
+                                        <p class="text-sm opacity-90">像素对齐 + 颜色优化</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图库网格 -->
+            <div id="galleryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- 图库项目将通过JavaScript动态生成 -->
+            </div>
+            
+            <!-- 加载更多按钮 -->
+            <div class="text-center mt-12">
+                <button id="loadMoreBtn" class="pixel-button px-8 py-3">
+                    加载更多示例
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 详情模态框 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-4">处理前</h3>
+                    <img id="modalBeforeImage" src="" alt="处理前" class="w-full rounded-lg">
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-white mb-4">处理后</h3>
+                    <img id="modalAfterImage" src="" alt="处理后" class="w-full rounded-lg">
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <h4 class="text-lg font-semibold text-white mb-4">处理参数</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <span class="text-gray-400">网格大小:</span>
+                        <span id="modalGridSize" class="text-white ml-2">16x16</span>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <span class="text-gray-400">降噪强度:</span>
+                        <span id="modalDenoise" class="text-white ml-2">50%</span>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <span class="text-gray-400">颜色数量:</span>
+                        <span id="modalColors" class="text-white ml-2">32色</span>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg">
+                        <span class="text-gray-400">处理时间:</span>
+                        <span id="modalTime" class="text-white ml-2">2.3s</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-center space-x-4">
+                <button class="pixel-button" onclick="tryThisExample()">尝试这个示例</button>
+                <button class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors" onclick="downloadExample()">下载示例</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="py-8 px-6 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto text-center">
+            <p class="text-gray-400">© 2024 PixelAI. 专业的像素图处理工具，为创作者提供卓越的图像处理体验。</p>
+        </div>
+    </footer>
+    
+    <script>
+        // 示例数据
+        const galleryData = [
+            {
+                id: 1,
+                title: "游戏角色优化",
+                category: "characters",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/preview.redd.it/f6859f76b2ca04f249cd7522cf95857642d5ac4a.png",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/www.kindpng.com/f592d66ee111b8cffe4fc481fad14aeb798fa478.png",
+                gridSize: "16x16",
+                denoise: "60%",
+                colors: "16色",
+                time: "1.8s",
+                views: 1234,
+                likes: 89
+            },
+            {
+                id: 2,
+                title: "像素风景画",
+                category: "landscapes",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/img.freepik.com/6d7e9b1e3845a1a750fe3d590f2f624488319dfe.jpg",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/img.freepik.com/1726b1212c8a3abedfa451aee7d56f4cbf8f5426.jpg",
+                gridSize: "32x32",
+                denoise: "40%",
+                colors: "64色",
+                time: "3.2s",
+                views: 2156,
+                likes: 156
+            },
+            {
+                id: 3,
+                title: "武器装备优化",
+                category: "objects",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/i.pinimg.com/8c1efa65f35f6643374bc6e66a1f60d5da589285.png",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/i.redd.it/567517e6bdad77425880e6d87a09b433bf58184a.png",
+                gridSize: "8x8",
+                denoise: "30%",
+                colors: "8色",
+                time: "0.9s",
+                views: 987,
+                likes: 67
+            },
+            {
+                id: 4,
+                title: "怪物角色设计",
+                category: "characters",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/img.freepik.com/9cabf7ebbea28e445124ba82a5fd26cb6b81465d.jpg",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/img.itch.zone/61e121da1ba625e22ef787452a51719f24f62806.jpg",
+                gridSize: "16x16",
+                denoise: "55%",
+                colors: "24色",
+                time: "2.1s",
+                views: 1543,
+                likes: 98
+            },
+            {
+                id: 5,
+                title: "食物像素艺术",
+                category: "objects",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/i.redd.it/0ad39a4d3243fc7ca12be80a284260c3385d8fae.jpg",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/i.etsystatic.com/1da284d828ffaf523af962d3a5a9b2dc64090e9f.jpg",
+                gridSize: "12x12",
+                denoise: "45%",
+                colors: "12色",
+                time: "1.5s",
+                views: 876,
+                likes: 54
+            },
+            {
+                id: 6,
+                title: "动物精灵图",
+                category: "characters",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/touch.ninosaur.com/2e63d322b1138c583b871b8af92577fcdb768d3c.png",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/fiverr-res.cloudinary.com/fe2b28b5ce198560e9d364fe5ed9f5e3b365a015.png",
+                gridSize: "16x16",
+                denoise: "35%",
+                colors: "20色",
+                time: "1.7s",
+                views: 1123,
+                likes: 76
+            },
+            {
+                id: 7,
+                title: "幻想场景",
+                category: "landscapes",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/img.zcool.cn/f9d2a268e64d9bbac1718bbf9b6e07a395441d9f.png",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/art.pixilart.com/8ccbef8d30c6d22c531a09e40db606e1be2f769d.png",
+                gridSize: "24x24",
+                denoise: "50%",
+                colors: "48色",
+                time: "2.8s",
+                views: 1832,
+                likes: 134
+            },
+            {
+                id: 8,
+                title: "复古游戏图标",
+                category: "objects",
+                beforeImage: "https://kimi-web-img.moonshot.cn/img/cdn.mos.cms.futurecdn.net/dcd4ae974428309ef2c847cfda9c59d41792c0af.png",
+                afterImage: "https://kimi-web-img.moonshot.cn/img/art.pixilart.com/8091276d8573aeb8b0d790777aca4423bf035f3b.png",
+                gridSize: "8x8",
+                denoise: "25%",
+                colors: "16色",
+                time: "1.2s",
+                views: 765,
+                likes: 43
+            }
+        ];
+        
+        let currentFilter = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 8;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCarousel();
+            renderGallery();
+            setupEventListeners();
+            initializeAnimations();
+        });
+        
+        function initializeCarousel() {
+            new Splide('#featured-carousel', {
+                type: 'loop',
+                autoplay: true,
+                interval: 4000,
+                pauseOnHover: true,
+                arrows: true,
+                pagination: true,
+                gap: '2rem',
+                breakpoints: {
+                    768: {
+                        gap: '1rem'
+                    }
+                }
+            }).mount();
+        }
+        
+        function renderGallery() {
+            const filteredData = currentFilter === 'all' 
+                ? galleryData 
+                : galleryData.filter(item => item.category === currentFilter);
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredData.slice(0, endIndex);
+            
+            const galleryGrid = document.getElementById('galleryGrid');
+            
+            if (currentPage === 1) {
+                galleryGrid.innerHTML = '';
+            }
+            
+            pageData.slice(startIndex).forEach((item, index) => {
+                const galleryItem = createGalleryItem(item);
+                galleryGrid.appendChild(galleryItem);
+                
+                // 动画效果
+                anime({
+                    targets: galleryItem,
+                    translateY: [50, 0],
+                    opacity: [0, 1],
+                    delay: index * 100,
+                    duration: 600,
+                    easing: 'easeOutExpo'
+                });
+            });
+            
+            // 更新加载更多按钮
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (endIndex >= filteredData.length) {
+                loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'inline-block';
+            }
+        }
+        
+        function createGalleryItem(item) {
+            const div = document.createElement('div');
+            div.className = 'gallery-item glass-panel';
+            div.onclick = () => openModal(item);
+            
+            div.innerHTML = `
+                <div class="relative aspect-square overflow-hidden rounded-lg">
+                    <img src="${item.afterImage}" alt="${item.title}" class="w-full h-full object-cover">
+                    <div class="comparison-overlay">
+                        <div class="text-center text-white">
+                            <p class="mb-2">点击查看对比</p>
+                            <svg class="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 12a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-white mb-2">${item.title}</h3>
+                    <div class="flex items-center justify-between text-sm text-gray-400 mb-3">
+                        <span>网格: ${item.gridSize}</span>
+                        <span>${item.colors}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>${item.views} 次查看</span>
+                        <span>${item.likes} 次点赞</span>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        function setupEventListeners() {
+            // 筛选标签
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    currentPage = 1;
+                    renderGallery();
+                });
+            });
+            
+            // 搜索
+            document.getElementById('searchInput').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const galleryItems = document.querySelectorAll('.gallery-item');
+                
+                galleryItems.forEach(item => {
+                    const title = item.querySelector('h3').textContent.toLowerCase();
+                    if (title.includes(searchTerm)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 排序
+            document.getElementById('sortSelect').addEventListener('change', function() {
+                // 这里可以实现排序逻辑
+                console.log('排序方式:', this.value);
+            });
+            
+            // 加载更多
+            document.getElementById('loadMoreBtn').addEventListener('click', function() {
+                currentPage++;
+                renderGallery();
+            });
+        }
+        
+        function initializeAnimations() {
+            // 页面加载动画
+            anime({
+                targets: '.glass-panel',
+                translateY: [50, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(200),
+                duration: 800,
+                easing: 'easeOutExpo'
+            });
+        }
+        
+        function openModal(item) {
+            document.getElementById('modalBeforeImage').src = item.beforeImage;
+            document.getElementById('modalAfterImage').src = item.afterImage;
+            document.getElementById('modalGridSize').textContent = item.gridSize;
+            document.getElementById('modalDenoise').textContent = item.denoise;
+            document.getElementById('modalColors').textContent = item.colors;
+            document.getElementById('modalTime').textContent = item.time;
+            
+            document.getElementById('detailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function tryThisExample() {
+            closeModal();
+            window.location.href = 'index.html';
+        }
+        
+        function downloadExample() {
+            // 模拟下载功能
+            alert('示例下载功能开发中...');
+        }
+        
+        // 点击模态框外部关闭
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // ESC键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

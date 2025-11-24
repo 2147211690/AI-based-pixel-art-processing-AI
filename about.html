@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用教程 - PixelAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        }
+        
+        .pixel-button {
+            background: linear-gradient(45deg, #00d4ff, #8b5cf6);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .pixel-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+        
+        .step-card {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #00d4ff, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #00d4ff, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        
+        .faq-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .faq-answer.active {
+            max-height: 200px;
+            padding-top: 15px;
+        }
+        
+        .tech-spec {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tech-spec:last-child {
+            border-bottom: none;
+        }
+        
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #00d4ff, #8b5cf6);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-panel">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <img src="resources/logo-pixel-ai.png" alt="PixelAI Logo" class="w-10 h-10">
+                    <h1 class="text-2xl font-bold text-white neon-text">PixelAI</h1>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="text-gray-300 hover:text-cyan-400 transition-colors">处理工具</a>
+                    <a href="gallery.html" class="text-gray-300 hover:text-cyan-400 transition-colors">示例图库</a>
+                    <a href="about.html" class="text-white hover:text-cyan-400 transition-colors">使用教程</a>
+                    <button class="pixel-button" onclick="window.location.href='index.html'">开始使用</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主要内容 -->
+    <main class="pt-24 pb-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- 页面标题 -->
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-white mb-6 neon-text">使用教程与文档</h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    了解如何使用PixelAI的强大功能，掌握像素图处理的技巧和方法
+                </p>
+            </div>
+            
+            <!-- 快速开始 -->
+            <section class="glass-panel rounded-2xl p-8 mb-12">
+                <h3 class="text-2xl font-bold text-white mb-8 text-center">快速开始</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="step-card glass-panel p-6 rounded-xl relative">
+                        <div class="step-number">1</div>
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white mb-3 text-center">上传图像</h4>
+                        <p class="text-gray-300 text-center text-sm">
+                            拖拽或点击上传您的像素图，支持PNG、JPG、WebP格式，最大10MB
+                        </p>
+                    </div>
+                    
+                    <div class="step-card glass-panel p-6 rounded-xl relative">
+                        <div class="step-number">2</div>
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white mb-3 text-center">调整参数</h4>
+                        <p class="text-gray-300 text-center text-sm">
+                            根据需求调整网格大小、降噪强度、颜色数量等处理参数
+                        </p>
+                    </div>
+                    
+                    <div class="step-card glass-panel p-6 rounded-xl relative">
+                        <div class="step-number">3</div>
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white mb-3 text-center">开始处理</h4>
+                        <p class="text-gray-300 text-center text-sm">
+                            点击处理按钮，AI将自动优化您的像素图，实时显示处理进度
+                        </p>
+                    </div>
+                    
+                    <div class="step-card glass-panel p-6 rounded-xl relative">
+                        <div class="step-number">4</div>
+                        <div class="feature-icon">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white mb-3 text-center">下载结果</h4>
+                        <p class="text-gray-300 text-center text-sm">
+                            预览处理效果，满意后选择格式和质量下载优化后的像素图
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8">
+                    <button class="pixel-button px-8 py-3 text-lg" onclick="window.location.href='index.html'">
+                        立即开始处理
+                    </button>
+                </div>
+            </section>
+            
+            <!-- 功能详解 -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <div class="glass-panel rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold text-white mb-6">像素对齐功能</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-cyan-400 mb-3">智能网格对齐</h4>
+                            <p class="text-gray-300 mb-4">
+                                自动检测像素边界并将像素对齐到指定的网格系统，支持8x8、16x16、32x32、64x64等多种网格大小。
+                            </p>
+                            <ul class="text-sm text-gray-400 space-y-2">
+                                <li>• 支持自定义网格大小和透明度</li>
+                                <li>• 实时预览网格辅助线</li>
+                                <li>• 智能颜色平均算法</li>
+                                <li>• 保持原始图像比例</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-semibold text-cyan-400 mb-3">使用技巧</h4>
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <p class="text-sm text-gray-300">
+                                    <strong>建议:</strong> 对于精细的像素艺术，建议使用16x16或更小的网格；
+                                    对于大尺寸的像素图，可以使用32x32或64x32网格以获得更好的效果。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-panel rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold text-white mb-6">杂色去除功能</h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-lg font-semibold text-cyan-400 mb-3">AI智能降噪</h4>
+                            <p class="text-gray-300 mb-4">
+                                使用先进的颜色聚类算法，智能识别并去除像素图中的杂色和噪声，同时保持图像的清晰度和细节。
+                            </p>
+                            <ul class="text-sm text-gray-400 space-y-2">
+                                <li>• 可调节降噪强度（0-100%）</li>
+                                <li>• 颜色容差控制</li>
+                                <li>• 支持限制最大颜色数量</li>
+                                <li>• 边缘保持平滑处理</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-semibold text-cyan-400 mb-3">参数说明</h4>
+                            <div class="space-y-3">
+                                <div class="tech-spec">
+                                    <span class="text-gray-300">降噪强度</span>
+                                    <span class="text-cyan-400">建议30-70%</span>
+                                </div>
+                                <div class="tech-spec">
+                                    <span class="text-gray-300">颜色容差</span>
+                                    <span class="text-cyan-400">建议20-40%</span>
+                                </div>
+                                <div class="tech-spec">
+                                    <span class="text-gray-300">颜色数量</span>
+                                    <span class="text-cyan-400">建议16-64色</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 技术规格 -->
+            <section class="glass-panel rounded-2xl p-8 mb-12">
+                <h3 class="text-2xl font-bold text-white mb-8 text-center">技术规格</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold text-cyan-400 mb-6">支持的格式</h4>
+                        <div class="space-y-4">
+                            <div class="tech-spec">
+                                <span class="text-gray-300">输入格式</span>
+                                <span class="text-white">PNG, JPG, WebP</span>
+                            </div>
+                            <div class="tech-spec">
+                                <span class="text-gray-300">输出格式</span>
+                                <span class="text-white">PNG, JPG, WebP</span>
+                            </div>
+                            <div class="tech-spec">
+                                <span class="text-gray-300">最大文件大小</span>
+                                <span class="text-white">10MB</span>
+                            </div>
+                            <div class="tech-spec">
+                                <span class="text-gray-300">最大图像尺寸</span>
+                                <span class="text-white">2048x2048px</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold text-cyan-400 mb-6">性能指标</h4>
+                        <div class="space-y-4">
+                            <div class="tech-spec">
+                                <span class="text-gray-300">处理速度</span>
+                                <span class="text-white">平均2-5秒</span>
+                            </div>
+                            <div class="tech-spec">
+                                <span class="text-gray-300">内存使用</span>
+                                <span class="text-white">&lt; 100MB</span>
+                            </div>
+                            <div class="tech-spec">
+                                <span class="text-gray-300">浏览器兼容</span>
+                                <span class="text-white">Chrome 80+, Firefox 75+</span>
+                            </div>
+                            <div class="tech-spec">
+                                <span class="text-gray-300">设备支持</span>
+                                <span class="text-white">桌面端, 移动端</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 算法原理 -->
+            <section class="glass-panel rounded-2xl p-8 mb-12">
+                <h3 class="text-2xl font-bold text-white mb-8 text-center">算法原理</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-semibold text-cyan-400 mb-4">像素对齐算法</h4>
+                        <p class="text-gray-300 mb-6">
+                            我们的像素对齐算法基于网格化分割和颜色平均技术：
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center text-xs font-bold text-black mt-1">1</div>
+                                <div>
+                                    <h5 class="text-white font-medium">网格分割</h5>
+                                    <p class="text-gray-400 text-sm">将图像分割成指定大小的网格单元</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center text-xs font-bold text-black mt-1">2</div>
+                                <div>
+                                    <h5 class="text-white font-medium">颜色分析</h5>
+                                    <p class="text-gray-400 text-sm">计算每个网格内的平均颜色值</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-cyan-400 rounded-full flex items-center justify-center text-xs font-bold text-black mt-1">3</div>
+                                <div>
+                                    <h5 class="text-white font-medium">统一填充</h5>
+                                    <p class="text-gray-400 text-sm">将网格内所有像素设置为平均颜色</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-semibold text-cyan-400 mb-4">杂色去除算法</h4>
+                        <p class="text-gray-300 mb-6">
+                            采用颜色聚类和相似度检测的智能降噪技术：
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-purple-400 rounded-full flex items-center justify-center text-xs font-bold text-black mt-1">1</div>
+                                <div>
+                                    <h5 class="text-white font-medium">颜色聚类</h5>
+                                    <p class="text-gray-400 text-sm">识别相似颜色并分组处理</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-purple-400 rounded-full flex items-center justify-center text-xs font-bold text-black mt-1">2</div>
+                                <div>
+                                    <h5 class="text-white font-medium">噪声检测</h5>
+                                    <p class="text-gray-400 text-sm">识别偏离主要颜色的杂色像素</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-purple-400 rounded-full flex items-center justify-center text-xs font-bold text-black mt-1">3</div>
+                                <div>
+                                    <h5 class="text-white font-medium">平滑处理</h5>
+                                    <p class="text-gray-400 text-sm">替换杂色为周围像素的颜色</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 性能图表 -->
+                <div class="mt-12">
+                    <h4 class="text-xl font-semibold text-white mb-6 text-center">处理效果对比</h4>
+                    <div id="performanceChart" style="width: 100%; height: 400px;"></div>
+                </div>
+            </section>
+            
+            <!-- 常见问题 -->
+            <section class="glass-panel rounded-2xl p-8 mb-12">
+                <h3 class="text-2xl font-bold text-white mb-8 text-center">常见问题</h3>
+                
+                <div class="space-y-4">
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-semibold text-white">支持哪些图像格式？</h4>
+                            <svg class="w-5 h-5 text-gray-400 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="faq-answer">
+                            <p class="text-gray-300">
+                                PixelAI支持PNG、JPG、WebP格式的图像文件。建议使用PNG格式以获得最佳的处理效果，
+                                因为PNG格式支持无损压缩和透明通道，非常适合像素艺术创作。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-semibold text-white">处理后的图像质量如何？</h4>
+                            <svg class="w-5 h-5 text-gray-400 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="faq-answer">
+                            <p class="text-gray-300">
+                                PixelAI使用先进的AI算法，能够在去除杂色和对齐像素的同时保持图像的清晰度和细节。
+                                处理效果取决于原始图像的质量和您设置的参数。我们建议先使用较小的参数进行测试，
+                                然后根据需要调整处理强度。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-semibold text-white">处理速度如何？</h4>
+                            <svg class="w-5 h-5 text-gray-400 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="faq-answer">
+                            <p class="text-gray-300">
+                                处理速度取决于图像的大小和您选择的处理参数。一般情况下，
+                                处理一张1024x1024像素的图像需要2-5秒。较大的图像或复杂的处理参数可能会需要更长时间。
+                                所有处理都在您的浏览器中本地完成，不会上传到服务器。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-semibold text-white">是否支持批量处理？</h4>
+                            <svg class="w-5 h-5 text-gray-400 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="faq-answer">
+                            <p class="text-gray-300">
+                                目前版本主要支持单张图像处理，以确保最佳的处理效果和质量控制。
+                                我们正在开发批量处理功能，未来版本将支持多张图像的批量处理和自动化工作流。
+                                如果您有批量处理的需求，可以联系我们获取定制化解决方案。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item" onclick="toggleFaq(this)">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-semibold text-white">如何获得最佳处理效果？</h4>
+                            <svg class="w-5 h-5 text-gray-400 transform transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="faq-answer">
+                            <p class="text-gray-300">
+                                要获得最佳效果，建议遵循以下步骤：
+                                <br><br>
+                                1. 使用高质量的原始图像，避免过度压缩<br>
+                                2. 先使用较小的参数进行测试处理<br>
+                                3. 根据预览效果逐步调整参数<br>
+                                4. 对于不同类型的图像使用不同的参数组合<br>
+                                5. 保存处理历史以便对比和回溯
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 最佳实践 -->
+            <section class="glass-panel rounded-2xl p-8">
+                <h3 class="text-2xl font-bold text-white mb-8 text-center">最佳实践建议</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold text-cyan-400 mb-4">✅ 推荐做法</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✓</div>
+                                <div>
+                                    <h5 class="text-white font-medium">使用高质量的原始图像</h5>
+                                    <p class="text-gray-400 text-sm">避免使用过度压缩或模糊的图像作为输入</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✓</div>
+                                <div>
+                                    <h5 class="text-white font-medium">从小参数开始测试</h5>
+                                    <p class="text-gray-400 text-sm">先使用较小的处理参数，逐步调整到理想效果</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✓</div>
+                                <div>
+                                    <h5 class="text-white font-medium">保存处理历史</h5>
+                                    <p class="text-gray-400 text-sm">记录不同参数的处理效果，便于对比和选择</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✓</div>
+                                <div>
+                                    <h5 class="text-white font-medium">使用合适的网格大小</h5>
+                                    <p class="text-gray-400 text-sm">根据图像内容和用途选择最适合的网格尺寸</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold text-red-400 mb-4">❌ 避免做法</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✗</div>
+                                <div>
+                                    <h5 class="text-white font-medium">过度处理</h5>
+                                    <p class="text-gray-400 text-sm">避免使用过高的降噪强度，可能会丢失细节</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✗</div>
+                                <div>
+                                    <h5 class="text-white font-medium">忽略预览效果</h5>
+                                    <p class="text-gray-400 text-sm">不要直接应用参数而不查看实时预览效果</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✗</div>
+                                <div>
+                                    <h5 class="text-white font-medium">使用不合适的网格</h5>
+                                    <p class="text-gray-400 text-sm">网格大小与图像内容不匹配会影响最终效果</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white mt-1">✗</div>
+                                <div>
+                                    <h5 class="text-white font-medium">忽略文件格式</h5>
+                                    <p class="text-gray-400 text-sm">不同的输出格式会影响图像质量和文件大小</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <!-- 页脚 -->
+    <footer class="py-8 px-6 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto text-center">
+            <p class="text-gray-400">© 2024 PixelAI. 专业的像素图处理工具，为创作者提供卓越的图像处理体验。</p>
+        </div>
+    </footer>
+    
+    <script>
+        // 初始化动画
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAnimations();
+            initializeChart();
+        });
+        
+        function initializeAnimations() {
+            // 页面加载动画
+            anime({
+                targets: '.glass-panel',
+                translateY: [50, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(200),
+                duration: 800,
+                easing: 'easeOutExpo'
+            });
+            
+            // 步骤卡片动画
+            anime({
+                targets: '.step-card',
+                scale: [0.8, 1],
+                opacity: [0, 1],
+                delay: anime.stagger(150, {start: 500}),
+                duration: 600,
+                easing: 'easeOutExpo'
+            });
+        }
+        
+        function initializeChart() {
+            const chart = echarts.init(document.getElementById('performanceChart'));
+            
+            const option = {
+                backgroundColor: 'transparent',
+                title: {
+                    text: '处理效果对比',
+                    textStyle: {
+                        color: '#ffffff',
+                        fontSize: 18
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderColor: '#00d4ff',
+                    textStyle: {
+                        color: '#ffffff'
+                    }
+                },
+                legend: {
+                    data: ['处理前', '处理后'],
+                    textStyle: {
+                        color: '#ffffff'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['图像清晰度', '颜色一致性', '像素对齐度', '整体质量', '文件大小优化'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4a5568'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#a0aec0'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100,
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4a5568'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#a0aec0'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#2d3748'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '处理前',
+                        type: 'bar',
+                        data: [65, 45, 30, 55, 40],
+                        itemStyle: {
+                            color: '#ef4444'
+                        }
+                    },
+                    {
+                        name: '处理后',
+                        type: 'bar',
+                        data: [85, 90, 95, 88, 75],
+                        itemStyle: {
+                            color: '#00d4ff'
+                        }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+            
+            // 响应式
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+        }
+        
+        function toggleFaq(element) {
+            const answer = element.querySelector('.faq-answer');
+            const icon = element.querySelector('svg');
+            
+            // 关闭其他FAQ
+            document.querySelectorAll('.faq-answer').forEach(item => {
+                if (item !== answer) {
+                    item.classList.remove('active');
+                }
+            });
+            
+            document.querySelectorAll('.faq-item svg').forEach(item => {
+                if (item !== icon) {
+                    item.style.transform = 'rotate(0deg)';
+                }
+            });
+            
+            // 切换当前FAQ
+            answer.classList.toggle('active');
+            
+            if (answer.classList.contains('active')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+    </script>
+</body>
+</html>
