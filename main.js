@@ -14,6 +14,7 @@ class PixelAIProcessor {
         this.dragStart = { x: 0, y: 0 };
         this.startOffset = { x: 0, y: 0 };
         this.displayScale = 1; // 额外的显示缩放（用于自动放大小图），不改变 zoom 滑块的值
+        this.isSmallMode = false; // 标识当前画布是否为下采样后的小图（每像素即一个格子）
         this.initializeElements();
         this.setupEventListeners();
         this.initializeParticleBackground();
@@ -349,6 +350,8 @@ class PixelAIProcessor {
 
         // 如果图像像素缓冲很小，自动放大以填充显示容器（不改变 zoom 滑块）
         this.autoScaleToFit();
+        // 新加载图片时不是小图模式
+        this.isSmallMode = false;
         
         // 启用下载按钮
         document.getElementById('downloadBtn').disabled = false;
@@ -396,6 +399,11 @@ class PixelAIProcessor {
         img.onload = () => {
             this.mainCanvas.width = state.width;
             this.mainCanvas.height = state.height;
+            // 同步网格画布尺寸
+            if (this.gridCanvas) {
+                this.gridCanvas.width = state.width;
+                this.gridCanvas.height = state.height;
+            }
             this.ctx = this.mainCanvas.getContext('2d');
             this.ctx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
             this.ctx.drawImage(img, 0, 0, this.mainCanvas.width, this.mainCanvas.height);
@@ -406,6 +414,8 @@ class PixelAIProcessor {
             this.displayScale = typeof state.displayScale === 'number' ? state.displayScale : 1;
             // 恢复 zoom（但不强制更新 slider 的显示值，保持用户可见控制不被意外覆盖）
             this.zoom = typeof state.zoom === 'number' ? state.zoom : (this.zoom || 1);
+            // 恢复时假定不是小图模式（如果是小图，state 恢复会设置合适的尺寸并可以设置 isSmallMode）
+            this.isSmallMode = false;
             this.updateCanvasZoom();
 
             this.addToHistory('撤销', `恢复: ${state.label || '上一步'}`);
@@ -420,6 +430,8 @@ class PixelAIProcessor {
             return;
         }
         const pixelSize = Math.max(1, Math.floor(parseInt(this.gridSizeInput.value) || 1));
+        // 如果当前为小图模式，每个像素本身即为一个网格单元
+        const effectivePixelSize = this.isSmallMode ? 1 : pixelSize;
         const opacity = parseInt(this.gridOpacitySlider.value) / 100;
         // 考虑合成缩放（用户缩放 * 自动显示放大）以调整线宽和偏移，尽量让网格线位于像素边界间隙
         const combinedScale = (this.zoom || 1) * (this.displayScale || 1);
@@ -432,8 +444,9 @@ class PixelAIProcessor {
         const offsetX = this.gridOffsetX ? parseInt(this.gridOffsetX.value) || 0 : 0;
         const offsetY = this.gridOffsetY ? parseInt(this.gridOffsetY.value) || 0 : 0;
 
-        const normOffsetX = ((offsetX % pixelSize) + pixelSize) % pixelSize;
-        const normOffsetY = ((offsetY % pixelSize) + pixelSize) % pixelSize;
+        // 如果是小图模式，强制 offset 为 0（每个小像素应从左上对齐）
+        const normOffsetX = this.isSmallMode ? 0 : (((offsetX % pixelSize) + pixelSize) % pixelSize);
+        const normOffsetY = this.isSmallMode ? 0 : (((offsetY % pixelSize) + pixelSize) % pixelSize);
 
         const logicalWidth = this.gridCanvas.width;
         const logicalHeight = this.gridCanvas.height;
@@ -441,14 +454,14 @@ class PixelAIProcessor {
         // 计算绘制时的小偏移，尽量让线位于网格边界的中心位置（减少对像素的覆盖）
         const lineOffset = 0.5 / (combinedScale || 1);
 
-        for (let x = normOffsetX; x <= logicalWidth; x += pixelSize) {
+        for (let x = normOffsetX; x <= logicalWidth; x += effectivePixelSize) {
             this.gridCtx.beginPath();
             this.gridCtx.moveTo(x + lineOffset, 0 - lineOffset);
             this.gridCtx.lineTo(x + lineOffset, logicalHeight + lineOffset);
             this.gridCtx.stroke();
         }
 
-        for (let y = normOffsetY; y <= logicalHeight; y += pixelSize) {
+        for (let y = normOffsetY; y <= logicalHeight; y += effectivePixelSize) {
             this.gridCtx.beginPath();
             this.gridCtx.moveTo(0 - lineOffset, y + lineOffset);
             this.gridCtx.lineTo(logicalWidth + lineOffset, y + lineOffset);
@@ -553,11 +566,17 @@ class PixelAIProcessor {
         // 将主画布尺寸改为小图尺寸并绘制小图
         this.mainCanvas.width = cols;
         this.mainCanvas.height = rows;
+        // 同步网格画布尺寸以保证网格与图像像素对齐
+        this.gridCanvas.width = cols;
+        this.gridCanvas.height = rows;
         this.ctx = this.mainCanvas.getContext('2d');
         this.ctx.clearRect(0, 0, cols, rows);
         // 关闭图像平滑以保留像素感
         this.ctx.imageSmoothingEnabled = false;
         this.ctx.drawImage(smallCanvas, 0, 0);
+
+        // 标记为小图模式：此时每个画布像素对应一个网格单元，网格偏移应视为 0
+        this.isSmallMode = true;
 
         this.processedImage = this.canvasToImage();
         this.addToHistory('应用为小图', `已转换为 ${cols}×${rows}`);
