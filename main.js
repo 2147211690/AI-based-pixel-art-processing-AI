@@ -5,13 +5,76 @@ class PixelAIProcessor {
         this.processedImage = null;
         this.currentCanvas = null;
         this.gridCanvas = null;
+        this.stateStack = []; // 用于撤销画布尺寸与像素级恢复
         this.processHistory = [];
         this.isProcessing = false;
-        
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.isDragging = false;
+        this.dragStart = { x: 0, y: 0 };
+        this.startOffset = { x: 0, y: 0 };
+        this.displayScale = 1; // 额外的显示缩放（用于自动放大小图），不改变 zoom 滑块的值
         this.initializeElements();
         this.setupEventListeners();
         this.initializeParticleBackground();
         this.initializeAnimations();
+    }
+
+    onPointerDown(e) {
+        this.isDragging = true;
+        this.dragStart = { x: e.clientX, y: e.clientY };
+        this.startOffset = { x: this.offsetX, y: this.offsetY };
+        try { e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+
+    onPointerMove(e) {
+        if (!this.isDragging) return;
+        // 使用用户缩放 (zoom) 将屏幕增量转换为逻辑像素，忽略 displayScale
+        // 这样在 displayScale（用于放大小图）很大时拖动仍能保持灵敏度
+        const userZoom = this.zoom || (this.zoomLevelSlider ? parseInt(this.zoomLevelSlider.value) / 100 : 1);
+        const combinedScale = userZoom * (this.displayScale || 1);
+        const dxScreen = e.clientX - this.dragStart.x;
+        const dyScreen = e.clientY - this.dragStart.y;
+        const dx = dxScreen / (userZoom || 1);
+        const dy = dyScreen / (userZoom || 1);
+        this.offsetX = this.startOffset.x + dx;
+        this.offsetY = this.startOffset.y + dy;
+        // 更新 transform（使用合成缩放显示，但拖动速度按 userZoom 计算）
+        const t = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${combinedScale})`;
+        this.mainCanvas.style.transform = t;
+        this.gridCanvas.style.transform = t;
+    }
+
+    onPointerUp(e) {
+        if (!this.isDragging) return;
+        this.isDragging = false;
+        try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+
+    // 自动计算 displayScale，使小图在视觉上放大填充容器（不改变 zoom 滑块的值）
+    autoScaleToFit() {
+        try {
+            if (!this.canvasContainer || !this.mainCanvas) return;
+            const containerRect = this.canvasContainer.getBoundingClientRect();
+            const availW = Math.max(1, containerRect.width);
+            const availH = Math.max(1, containerRect.height);
+
+            // 计算整数倍放大，保持像素块整齐（取 floor）
+            const scaleX = Math.floor(availW / this.mainCanvas.width) || 0;
+            const scaleY = Math.floor(availH / this.mainCanvas.height) || 0;
+            const best = Math.max(1, Math.min(Math.max(scaleX, scaleY), Math.max(scaleX, scaleY)));
+
+            // 如果 best <= 1 表示不需要放大
+            this.displayScale = best > 1 ? best : 1;
+
+            // 更新 transform 使用合成缩放
+            const combinedScale = (this.zoom || 1) * (this.displayScale || 1);
+            const t = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${combinedScale})`;
+            this.mainCanvas.style.transform = t;
+            this.gridCanvas.style.transform = t;
+        } catch (e) {
+            console.warn('autoScaleToFit 失败:', e);
+        }
     }
     
     initializeElements() {
@@ -33,6 +96,7 @@ class PixelAIProcessor {
         this.colorToleranceSlider = document.getElementById('colorTolerance');
         this.colorCountSlider = document.getElementById('colorCount');
         this.zoomLevelSlider = document.getElementById('zoomLevel');
+        this.applySmallBtn = document.getElementById('applySmallBtn');
         
         // 显示元素
         this.imageDimensions = document.getElementById('imageDimensions');
@@ -43,6 +107,17 @@ class PixelAIProcessor {
         // 设置画布上下文
         this.ctx = this.mainCanvas.getContext('2d');
         this.gridCtx = this.gridCanvas.getContext('2d');
+        // 确保 transform 以画布左上角为基准，便于缩放/平移计算
+        this.mainCanvas.style.transformOrigin = '0 0';
+        this.gridCanvas.style.transformOrigin = '0 0';
+        // 使用最近邻像素显示，保证放大时像素块清晰
+        this.mainCanvas.style.imageRendering = 'pixelated';
+        this.gridCanvas.style.imageRendering = 'pixelated';
+        // 禁用图像平滑以使用邻近采样
+        try {
+            this.ctx.imageSmoothingEnabled = false;
+            this.gridCtx.imageSmoothingEnabled = false;
+        } catch (e) {}
     }
     
     setupEventListeners() {
@@ -84,11 +159,23 @@ class PixelAIProcessor {
             if (this.gridSizeValue) this.gridSizeValue.textContent = e.target.value + ' px';
             this.updateGrid();
         });
+
+        if (this.applySmallBtn) this.applySmallBtn.addEventListener('click', () => this.applySmallImage());
         
         this.zoomLevelSlider.addEventListener('input', (e) => {
             document.getElementById('zoomValue').textContent = e.target.value + '%';
             this.updateCanvasZoom();
         });
+
+        // 画布容器平移（拖拽）
+        if (this.canvasContainer) {
+            this.canvasContainer.style.touchAction = 'none';
+            this.canvasContainer.addEventListener('pointerdown', (e) => this.onPointerDown(e));
+            this.canvasContainer.addEventListener('pointermove', (e) => this.onPointerMove(e));
+            this.canvasContainer.addEventListener('pointerup', (e) => this.onPointerUp(e));
+            this.canvasContainer.addEventListener('pointercancel', (e) => this.onPointerUp(e));
+            this.canvasContainer.addEventListener('pointerleave', (e) => this.onPointerUp(e));
+        }
         
         // 参数滑块事件
         this.denoiseStrengthSlider.addEventListener('input', (e) => {
@@ -259,6 +346,9 @@ class PixelAIProcessor {
         
         // 更新网格
         this.updateGrid();
+
+        // 如果图像像素缓冲很小，自动放大以填充显示容器（不改变 zoom 滑块）
+        this.autoScaleToFit();
         
         // 启用下载按钮
         document.getElementById('downloadBtn').disabled = false;
@@ -275,6 +365,54 @@ class PixelAIProcessor {
             easing: 'easeOutExpo'
         });
     }
+
+    // 保存当前主画布状态，便于撤销（保存为 dataURL 与尺寸）
+    pushState(label) {
+        try {
+            const dataURL = this.mainCanvas.toDataURL();
+            const state = {
+                dataURL,
+                width: this.mainCanvas.width,
+                height: this.mainCanvas.height,
+                offsetX: this.offsetX || 0,
+                offsetY: this.offsetY || 0,
+                zoom: this.zoom || (this.zoomLevelSlider ? parseInt(this.zoomLevelSlider.value) / 100 : 1),
+                displayScale: this.displayScale || 1,
+                label,
+                timestamp: Date.now()
+            };
+            this.stateStack.push(state);
+            // 限制历史长度
+            if (this.stateStack.length > 50) this.stateStack.shift();
+        } catch (e) {
+            console.warn('pushState 失败:', e);
+        }
+    }
+
+    // 从 state 恢复画布（dataURL -> image -> draw）
+    restoreState(state) {
+        if (!state || !state.dataURL) return;
+        const img = new Image();
+        img.onload = () => {
+            this.mainCanvas.width = state.width;
+            this.mainCanvas.height = state.height;
+            this.ctx = this.mainCanvas.getContext('2d');
+            this.ctx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
+            this.ctx.drawImage(img, 0, 0, this.mainCanvas.width, this.mainCanvas.height);
+            this.processedImage = this.canvasToImage();
+            // 恢复视图相关状态
+            this.offsetX = typeof state.offsetX === 'number' ? state.offsetX : 0;
+            this.offsetY = typeof state.offsetY === 'number' ? state.offsetY : 0;
+            this.displayScale = typeof state.displayScale === 'number' ? state.displayScale : 1;
+            // 恢复 zoom（但不强制更新 slider 的显示值，保持用户可见控制不被意外覆盖）
+            this.zoom = typeof state.zoom === 'number' ? state.zoom : (this.zoom || 1);
+            this.updateCanvasZoom();
+
+            this.addToHistory('撤销', `恢复: ${state.label || '上一步'}`);
+            this.updateGrid();
+        };
+        img.src = state.dataURL;
+    }
     
     updateGrid() {
         if (!this.showGridCheckbox.checked) {
@@ -283,31 +421,49 @@ class PixelAIProcessor {
         }
         const pixelSize = Math.max(1, Math.floor(parseInt(this.gridSizeInput.value) || 1));
         const opacity = parseInt(this.gridOpacitySlider.value) / 100;
+        // 考虑合成缩放（用户缩放 * 自动显示放大）以调整线宽和偏移，尽量让网格线位于像素边界间隙
+        const combinedScale = (this.zoom || 1) * (this.displayScale || 1);
 
         this.gridCtx.clearRect(0, 0, this.gridCanvas.width, this.gridCanvas.height);
         this.gridCtx.strokeStyle = `rgba(0, 212, 255, ${opacity})`;
-        this.gridCtx.lineWidth = 1;
+        // 线宽按合成缩放反向缩放，使视觉上接近 1px
+        this.gridCtx.lineWidth = Math.max(1 / (combinedScale || 1), 0.25);
 
-        // 使用用户输入的像素大小绘制网格
-        for (let x = 0; x <= this.gridCanvas.width; x += pixelSize) {
+        const offsetX = this.gridOffsetX ? parseInt(this.gridOffsetX.value) || 0 : 0;
+        const offsetY = this.gridOffsetY ? parseInt(this.gridOffsetY.value) || 0 : 0;
+
+        const normOffsetX = ((offsetX % pixelSize) + pixelSize) % pixelSize;
+        const normOffsetY = ((offsetY % pixelSize) + pixelSize) % pixelSize;
+
+        const logicalWidth = this.gridCanvas.width;
+        const logicalHeight = this.gridCanvas.height;
+
+        // 计算绘制时的小偏移，尽量让线位于网格边界的中心位置（减少对像素的覆盖）
+        const lineOffset = 0.5 / (combinedScale || 1);
+
+        for (let x = normOffsetX; x <= logicalWidth; x += pixelSize) {
             this.gridCtx.beginPath();
-            this.gridCtx.moveTo(x, 0);
-            this.gridCtx.lineTo(x, this.gridCanvas.height);
+            this.gridCtx.moveTo(x + lineOffset, 0 - lineOffset);
+            this.gridCtx.lineTo(x + lineOffset, logicalHeight + lineOffset);
             this.gridCtx.stroke();
         }
 
-        for (let y = 0; y <= this.gridCanvas.height; y += pixelSize) {
+        for (let y = normOffsetY; y <= logicalHeight; y += pixelSize) {
             this.gridCtx.beginPath();
-            this.gridCtx.moveTo(0, y);
-            this.gridCtx.lineTo(this.gridCanvas.width, y);
+            this.gridCtx.moveTo(0 - lineOffset, y + lineOffset);
+            this.gridCtx.lineTo(logicalWidth + lineOffset, y + lineOffset);
             this.gridCtx.stroke();
         }
     }
     
     updateCanvasZoom() {
         const zoom = parseInt(this.zoomLevelSlider.value) / 100;
-        this.mainCanvas.style.transform = `scale(${zoom})`;
-        this.gridCanvas.style.transform = `scale(${zoom})`;
+        this.zoom = zoom;
+        // 合成显示缩放（用户缩放 * 自动显示缩放），保持 zoom 滑块显示为用户值
+        const combinedScale = (this.zoom || 1) * (this.displayScale || 1);
+        const t = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${combinedScale})`;
+        this.mainCanvas.style.transform = t;
+        this.gridCanvas.style.transform = t;
     }
     
     async alignPixels() {
@@ -335,6 +491,82 @@ class PixelAIProcessor {
             this.isProcessing = false;
             this.hideProcessingOverlay();
         }
+    }
+
+    // 将当前画布下采样为 cols x rows 小图，并替换主画布尺寸为该小图
+    applySmallImage() {
+        if (!this.originalImage) return;
+
+        // 自动根据当前网格像素大小计算目标小图 cols/rows（不再依赖用户输入）
+        const px = Math.max(1, Math.floor(parseInt(this.gridSizeInput.value) || 1));
+        const width = this.mainCanvas.width;
+        const height = this.mainCanvas.height;
+        const cols = Math.max(1, Math.ceil(width / px));
+        const rows = Math.max(1, Math.ceil(height / px));
+
+        // 保存当前状态以支持撤销
+        this.pushState(`应用为小图 ${cols}×${rows}`);
+
+        // 创建离屏小画布并把主画布内容绘制到小画布（做下采样）
+        const smallCanvas = document.createElement('canvas');
+        smallCanvas.width = cols;
+        smallCanvas.height = rows;
+        const smallCtx = smallCanvas.getContext('2d');
+
+        // 使用逐块平均采样，保证每个格子对应小图的一个像素
+        const srcImage = this.ctx.getImageData(0, 0, width, height).data;
+        const smallImage = smallCtx.createImageData(cols, rows);
+        const smallData = smallImage.data;
+
+        for (let gy = 0; gy < rows; gy++) {
+            const startY = gy * px;
+            const endY = Math.min(startY + px, height);
+            for (let gx = 0; gx < cols; gx++) {
+                const startX = gx * px;
+                const endX = Math.min(startX + px, width);
+
+                let totalR = 0, totalG = 0, totalB = 0, totalA = 0, count = 0;
+                for (let y = startY; y < endY; y++) {
+                    for (let x = startX; x < endX; x++) {
+                        const idx = (y * width + x) * 4;
+                        totalR += srcImage[idx];
+                        totalG += srcImage[idx + 1];
+                        totalB += srcImage[idx + 2];
+                        totalA += srcImage[idx + 3];
+                        count++;
+                    }
+                }
+
+                const si = (gy * cols + gx) * 4;
+                if (count === 0) {
+                    smallData[si] = 0; smallData[si + 1] = 0; smallData[si + 2] = 0; smallData[si + 3] = 0;
+                } else {
+                    smallData[si] = Math.round(totalR / count);
+                    smallData[si + 1] = Math.round(totalG / count);
+                    smallData[si + 2] = Math.round(totalB / count);
+                    smallData[si + 3] = Math.round(totalA / count);
+                }
+            }
+        }
+        smallCtx.putImageData(smallImage, 0, 0);
+
+        // 将主画布尺寸改为小图尺寸并绘制小图
+        this.mainCanvas.width = cols;
+        this.mainCanvas.height = rows;
+        this.ctx = this.mainCanvas.getContext('2d');
+        this.ctx.clearRect(0, 0, cols, rows);
+        // 关闭图像平滑以保留像素感
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.drawImage(smallCanvas, 0, 0);
+
+        this.processedImage = this.canvasToImage();
+        this.addToHistory('应用为小图', `已转换为 ${cols}×${rows}`);
+        // 更新网格以匹配新画布（通常网格会被隐藏或按需显示）
+        this.updateGrid();
+        // 自动放大显示小图以填充容器（不改变 zoom 滑块）
+        this.autoScaleToFit();
+        // 启用下载
+        document.getElementById('downloadBtn').disabled = false;
     }
     
     performPixelAlignment(pixelSize) {
@@ -598,17 +830,23 @@ class PixelAIProcessor {
     }
     
     undoLast() {
+        // 优先使用 stateStack 恢复（它保存了画布像素与尺寸）
+        if (this.stateStack && this.stateStack.length > 0) {
+            const lastState = this.stateStack.pop();
+            this.restoreState(lastState);
+            // 更新历史面板显示
+            if (this.historyPanel && this.historyPanel.firstChild) this.historyPanel.removeChild(this.historyPanel.firstChild);
+            return;
+        }
+
+        // 回退到旧的 processHistory 行为（如果没有 stateStack）
         if (this.processHistory.length <= 1) return;
-        
         this.processHistory.pop(); // 移除最后一个操作
         const lastOperation = this.processHistory[this.processHistory.length - 1];
-        
         if (lastOperation && lastOperation.action === '图像上传') {
             this.resetImage();
         }
-        
-        // 更新历史面板
-        this.historyPanel.removeChild(this.historyPanel.firstChild);
+        if (this.historyPanel && this.historyPanel.firstChild) this.historyPanel.removeChild(this.historyPanel.firstChild);
     }
     
     toggleComparison() {
